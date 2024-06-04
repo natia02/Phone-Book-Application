@@ -8,19 +8,18 @@ namespace Phone_Book_Application
     {
         public static void Main()
         {
+            PhoneBook phoneBook = new PhoneBook();
             PrintInstruction();
-            UserInteraction();
+            UserInteraction(phoneBook);
             
         }
         
-        static void UserInteraction()
+        static void UserInteraction(PhoneBook phoneBook)
         {
-            PhoneBook phoneBook = new PhoneBook();
             string command = GetCommand("\nEnter a command: ");
 
             if (command.Equals("add"))
             {
-                
             }
             
             if (command.Equals("remove"))
