@@ -12,26 +12,65 @@ namespace Phone_Book_Application
             PrintInstruction();
             UserInteraction(phoneBook);
             
+            phoneBook.SaveContacts();
         }
         
         static void UserInteraction(PhoneBook phoneBook)
         {
             string command = GetCommand("\nEnter a command: ");
 
-            if (command.Equals("add"))
+            switch (command)
             {
+                case "add":
+                    string name = ReadName("Please enter a name: ");
+                    string phoneNumber = ReadPhoneNumber("Please enter a phone number: ");
+                    phoneBook.AddContact(name, phoneNumber);
+                    break;
+                case "remove":
+                    name = ReadName("Please enter a name: ");
+                    phoneBook.RemoveContact(name);
+                    break;
+                case "list":
+                    phoneBook.ListContacts();
+                    break;
+                case "search":
+                    name = ReadName("Please enter a name: ");
+                    phoneBook.SearchByName(name);
+                    break;
+                case "update":
+                    name = ReadName("Please enter a name: ");
+                    phoneNumber = ReadPhoneNumber("Please enter a phone number: ");
+                    phoneBook.UpdateContact(name, phoneNumber);
+                    break;
+                case "exit":
+                    return;
+                default:
+                    Console.WriteLine("Please enter a valid command.");
+                    break;
             }
             
-            if (command.Equals("remove"))
-            {
-                
-            }
+            Continue(phoneBook);
             
-            if (command.Equals("list"))
-            {
-                
-            }
+        }
+
+        static void Continue(PhoneBook phoneBook)
+        {
+            Console.WriteLine("Do you need anything else? (yes/no)");
+            string answer = (Console.ReadLine() ?? String.Empty).Trim().ToLower();
             
+            while (!IsValidAnswer(answer))
+            {
+                Console.WriteLine("Please enter a valid answer (yes/no):");
+                answer = (Console.ReadLine() ?? String.Empty).Trim().ToLower();
+            }
+
+            if (answer.Equals("yes"))
+            {
+                UserInteraction(phoneBook);
+            }else if (answer.Equals("no"))
+            {
+                Console.WriteLine("Goodbye!");
+            }
         }
 
         static string ReadPhoneNumber(string prompt)
@@ -48,7 +87,20 @@ namespace Phone_Book_Application
             
         }
 
-        
+        static string ReadName(string prompt)
+        {
+            Console.WriteLine(prompt);
+            string name = (Console.ReadLine()?? string.Empty).Trim();
+            
+            while (string.IsNullOrEmpty(name))
+            {
+                Console.WriteLine("Please, enter a name");
+                name = (Console.ReadLine()?? string.Empty).Trim();
+            }
+            return name;
+        }
+
+
 
         static bool IsValidPhoneNumber(string phoneNumber)
         {
@@ -63,13 +115,15 @@ namespace Phone_Book_Application
             Console.WriteLine("Enter 'add' to add a contact");
             Console.WriteLine("Enter 'remove' to remove a contact");
             Console.WriteLine("Enter 'list' to list all contacts");
+            Console.WriteLine("Enter 'search' to search contact with a name");
+            Console.WriteLine("Enter 'update' to update existing contact's phone number");
             Console.WriteLine("Enter 'exit' to exit the application");
         }
         
         
         static bool IsValidCommand(string? response)
         {
-            return response is "add" or "remove" or "list" or "exit";
+            return response is "add" or "remove" or "list" or "exit" or "search" or "update";
         }
 
         static string GetCommand(string prompt)
@@ -79,11 +133,16 @@ namespace Phone_Book_Application
 
             while (!IsValidCommand(response))
             {
-                Console.WriteLine("Please, enter a valid command: add, remove, list or exit");  
+                Console.WriteLine("Please, enter a valid command: add, remove, list, update, search or exit");  
                 response = (Console.ReadLine() ?? string.Empty).Trim().ToLower();
             }
             
             return response;
+        }
+
+        static bool IsValidAnswer(string answer)
+        {
+            return answer is "yes" or "no";
         }
 
 
