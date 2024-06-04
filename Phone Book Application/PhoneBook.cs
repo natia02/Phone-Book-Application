@@ -2,8 +2,14 @@
 
 public class PhoneBook
 {
-    public Dictionary<string, Contact> Contacts { get; } = new();
+    public Dictionary<string, Contact> Contacts { get; }
     public const string FileName = "Data/contacts.json";
+    
+    public PhoneBook()
+    {
+        Contacts = new Dictionary<string, Contact>();
+        LoadContacts();
+    }
 
     public void AddContact(string name, string phoneNumber)
     {
