@@ -6,7 +6,7 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [Commands](#commands)
-- [Contact](#contact)
+
 
 ## Introduction
 The **Phone Book Application** is a simple console-based application that allows users to manage their contacts. Users can add, remove, list, search, and update contact information, and the contact data is saved to a JSON file for persistence.
