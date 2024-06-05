@@ -22,7 +22,7 @@ The **Phone Book Application** is a simple console-based application that allows
 ## Installation
 1. **Clone the repository:**
     ```sh
-    git clone https://github.com/your-username/phone-book-application.git
+    git clone https://github.com/natia02/Phone-Book-Application.git
     ```
 2. **Navigate to the project directory:**
     ```sh
