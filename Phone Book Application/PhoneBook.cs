@@ -67,6 +67,7 @@ public class PhoneBook
         {
             Contacts.Remove(name);
             Console.WriteLine($"Contact with name {name} has been removed.");
+            DeleteContactFromDatabase(name);
             return true;
         }
         else
@@ -75,6 +76,26 @@ public class PhoneBook
             return false;
         }
         
+    }
+
+    private bool DeleteContactFromDatabase(string name)
+    {
+        try
+        {
+    
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            
+            var query = @"DELETE FROM Contacts WHERE Name = @Name";
+
+            connection.Execute(query, new { Name = name });
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error removing contact from the database: {e.Message}");
+            return false;
+        }
     }
 
     public void ListContacts()
