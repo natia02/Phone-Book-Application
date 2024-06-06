@@ -9,7 +9,7 @@
 
 
 ## Introduction
-The **Phone Book Application** is a simple console-based application that allows users to manage their contacts. Users can add, remove, list, search, and update contact information, and the contact data is saved to a JSON file for persistence.
+The **Phone Book Application** is a simple console-based application that allows users to manage their contacts. Users can add, remove, list, search, and update contact information, and the contact data is saved to a SQLite database for persistence.
 
 ## Features
 - **Add Contacts:** Add new contacts with a name and phone number.
@@ -17,7 +17,7 @@ The **Phone Book Application** is a simple console-based application that allows
 - **List Contacts:** Display all stored contacts.
 - **Search Contacts:** Search for a contact by name.
 - **Update Contacts:** Update the phone number of an existing contact.
-- **Persistent Storage:** Contacts are saved to a JSON file and loaded when the application starts.
+- **Persistent Storage:** Contacts are saved to a SQLite database (`phonebook.db`) and loaded when the application starts.
 
 ## Installation
 1. **Clone the repository:**
@@ -34,7 +34,7 @@ The **Phone Book Application** is a simple console-based application that allows
 ## Usage
 1. **Run the application:**
     - Execute the `Main` method in the `Program` class.
-    - The application will load existing contacts from `contacts.json` if the file exists.
+    - The application will load existing contacts from the SQLite database (`phonebook.db`) if available.
 
 2. **Follow the on-screen instructions to interact with the application.**
 
