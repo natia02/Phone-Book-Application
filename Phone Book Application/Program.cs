@@ -1,21 +1,32 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
+using Microsoft.Extensions.Configuration;
 
 
 namespace Phone_Book_Application
 {
     public class Program
     {
-        public static void Main()
+        public static async Task Main()
         {
-            PhoneBook phoneBook = new PhoneBook();
+            var configuration = GetConfiguration();
+            PhoneBook phoneBook = new PhoneBook(configuration);
             PrintInstruction();
-            UserInteraction(phoneBook);
+            await UserInteraction(phoneBook);
             
             phoneBook.SaveContacts();
         }
-        
-        static void UserInteraction(PhoneBook phoneBook)
+
+        private static IConfiguration GetConfiguration()
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddEnvironmentVariables();
+
+            return builder.Build();
+        }
+
+        static async Task UserInteraction(PhoneBook phoneBook)
         {
             string command = GetCommand("\nEnter a command: ");
 
@@ -49,11 +60,11 @@ namespace Phone_Book_Application
                     break;
             }
             
-            Continue(phoneBook);
+            await Continue(phoneBook);
             
         }
 
-        static void Continue(PhoneBook phoneBook)
+        static async Task Continue(PhoneBook phoneBook)
         {
             Console.WriteLine("Do you need anything else? (yes/no)");
             string answer = (Console.ReadLine() ?? String.Empty).Trim().ToLower();
@@ -66,7 +77,7 @@ namespace Phone_Book_Application
 
             if (answer.Equals("yes"))
             {
-                UserInteraction(phoneBook);
+                await UserInteraction(phoneBook);
             }else if (answer.Equals("no"))
             {
                 Console.WriteLine("Goodbye!");

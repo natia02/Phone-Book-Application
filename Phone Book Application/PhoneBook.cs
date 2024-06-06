@@ -1,17 +1,27 @@
-﻿using System.Text.Json;
+﻿using Dapper;
+using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Configuration;
 
 namespace Phone_Book_Application;
 
 public class PhoneBook
 {
     private Dictionary<string, Contact> Contacts { get; }
-    private static readonly string FileName = Path.Combine(GetProjectDirectory(), "Data", "contacts.json");
-        
+    private readonly string _connectionString;
 
     
-    public PhoneBook()
+    public PhoneBook(IConfiguration configuration)
     {
         Contacts = new Dictionary<string, Contact>();
+        var projectDirectory = GetProjectDirectory();
+        var databasePath = Path.Combine(projectDirectory, "phonebook.db");
+        _connectionString = configuration.GetConnectionString("DefaultConnection")
+                            ?? throw new ArgumentException("Connection string is not specified");
+        _connectionString = new SqliteConnectionStringBuilder(_connectionString)
+        {
+            DataSource = databasePath
+        }.ConnectionString;
+        CreateDatabaseAsync().Wait();
         LoadContacts();
     }
     
@@ -24,6 +34,13 @@ public class PhoneBook
             throw new DirectoryNotFoundException("Project directory not found.");
         }
         return projectDirectory;
+    }
+    
+    private async Task CreateDatabaseAsync()
+    {
+        await using var connection = new SqliteConnection(_connectionString);
+        await connection.OpenAsync();
+        await connection.ExecuteAsync("CREATE TABLE IF NOT EXISTS Contacts (Name TEXT PRIMARY KEY, PhoneNumber TEXT)");
     }
 
     public bool AddContact(string name, string phoneNumber)
@@ -113,14 +130,21 @@ public class PhoneBook
     {
         try
         {
-            var directory = (Path.GetDirectoryName(FileName) ?? String.Empty);
-            if (!Directory.Exists(directory))
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+
+            foreach (var contact in Contacts.Values)
             {
-                Directory.CreateDirectory(directory);
+                var query = @"
+                    INSERT INTO Contacts (Name, PhoneNumber)
+                    VALUES (@Name, @PhoneNumber)
+                    ON CONFLICT (Name) DO UPDATE SET
+                        PhoneNumber = excluded.PhoneNumber 
+                ";
+                
+                connection.Execute(query, new {contact.Name, contact.PhoneNumber});
+                
             }
-            
-            var json = Contacts.ToJson(writeIndented : true);
-            File.WriteAllText(FileName, json);
             Console.WriteLine("Contacts have been saved.");
             return true;
 
@@ -137,28 +161,28 @@ public class PhoneBook
     {
         try
         {
-            if (File.Exists(FileName))
-            {
-                var json = File.ReadAllText(FileName);
-                var contacts = JsonSerializer.Deserialize<Dictionary<string, Contact>>(json);
-                if (contacts != null)
-                {
-                    foreach (var contact in contacts)
-                    {
-                        Contacts.Add(contact.Key, contact.Value);
-                    }
-                    Console.WriteLine("Contacts loaded successfully.");
-                    return true;
-                }
-            }
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            
+            var query = @"
+                SELECT Name, PhoneNumber
+                FROM Contacts
+            ";
+            
+            var contacts = connection.Query<Contact>(query);
 
+            foreach (var contact in contacts)
+            {
+                Contacts.Add(contact.Name, contact);
+            }
+            Console.WriteLine("Contacts loaded successfully.");
+            return true;
         }
         catch (Exception e)
         {
             Console.WriteLine($"Error loading contacts: {e.Message}");
             return false;
         }
-        return false;
         
     }
     
