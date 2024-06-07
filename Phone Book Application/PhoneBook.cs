@@ -22,7 +22,7 @@ public class PhoneBook
             DataSource = databasePath
         }.ConnectionString;
         CreateDatabaseAsync().Wait();
-        LoadContacts();
+        LoadContacts().Wait();
     }
     
     private static string GetProjectDirectory()
@@ -40,7 +40,8 @@ public class PhoneBook
     {
         await using var connection = new SqliteConnection(_connectionString);
         await connection.OpenAsync();
-        await connection.ExecuteAsync("CREATE TABLE IF NOT EXISTS Contacts (Name TEXT PRIMARY KEY, PhoneNumber TEXT)");
+        await connection.ExecuteAsync("CREATE TABLE IF NOT EXISTS Contacts " +
+                                      "(Name VARCHAR(50) PRIMARY KEY, PhoneNumber VARCHAR(50) NOT NULL)");
     }
 
     public bool AddContact(string name, string phoneNumber)
@@ -48,7 +49,8 @@ public class PhoneBook
         if (!Contacts.ContainsKey(name))
         {
             Contact contact = new Contact(name, phoneNumber);
-            Contacts.Add(name, contact);
+            Contacts.Add(name, contact); 
+            SaveContacts(contact).Wait();
             Console.WriteLine($"Contact with name {name} has been added.");
             return true;
         }
@@ -67,7 +69,7 @@ public class PhoneBook
         {
             Contacts.Remove(name);
             Console.WriteLine($"Contact with name {name} has been removed.");
-            DeleteContactFromDatabase(name);
+            DeleteContactFromDatabase(name).Wait();
             return true;
         }
         else
@@ -78,23 +80,21 @@ public class PhoneBook
         
     }
 
-    private bool DeleteContactFromDatabase(string name)
+    private async Task DeleteContactFromDatabase(string name)
     {
         try
         {
     
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+            await using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
             
             var query = @"DELETE FROM Contacts WHERE Name = @Name";
 
-            connection.Execute(query, new { Name = name });
-            return true;
+            await connection.ExecuteAsync(query, new { Name = name });
         }
         catch (Exception e)
         {
             Console.WriteLine($"Error removing contact from the database: {e.Message}");
-            return false;
         }
     }
 
@@ -134,6 +134,7 @@ public class PhoneBook
         {
             Contacts[name] = contact with {PhoneNumber = phoneNumber};
             Console.WriteLine($"Contact with name {name} has been updated.");
+            SaveContacts(Contacts[name]).Wait();
             return true;
         }
         else
@@ -147,62 +148,53 @@ public class PhoneBook
     
   
 
-    public bool SaveContacts()
+    private async Task SaveContacts(Contact contact)
     {
         try
         {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
-
-            foreach (var contact in Contacts.Values)
-            {
-                var query = @"
+            await using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            
+            var query = @"
                     INSERT INTO Contacts (Name, PhoneNumber)
                     VALUES (@Name, @PhoneNumber)
                     ON CONFLICT (Name) DO UPDATE SET
                         PhoneNumber = excluded.PhoneNumber 
                 ";
                 
-                connection.Execute(query, new {contact.Name, contact.PhoneNumber});
-                
-            }
-            Console.WriteLine("Contacts have been saved.");
-            return true;
+            await connection.ExecuteAsync(query, new { Name = contact.Name, PhoneNumber = contact.PhoneNumber });
 
         }
         catch (Exception e)
         {
             Console.WriteLine($"Error saving contacts: {e.Message}");
-            return false;
         }
         
     }
     
-    private bool LoadContacts()
+    private async Task LoadContacts()
     {
         try
         {
-            using var connection = new SqliteConnection(_connectionString);
-            connection.Open();
+            await using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
             
             var query = @"
                 SELECT Name, PhoneNumber
                 FROM Contacts
             ";
             
-            var contacts = connection.Query<Contact>(query);
+            var contacts = await connection.QueryAsync<Contact>(query);
 
             foreach (var contact in contacts)
             {
                 Contacts.Add(contact.Name, contact);
             }
             Console.WriteLine("Contacts loaded successfully.");
-            return true;
         }
         catch (Exception e)
         {
             Console.WriteLine($"Error loading contacts: {e.Message}");
-            return false;
         }
         
     }

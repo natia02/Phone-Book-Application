@@ -13,7 +13,6 @@ namespace Phone_Book_Application
             PrintInstruction();
             await UserInteraction(phoneBook);
             
-            phoneBook.SaveContacts();
         }
 
         private static IConfiguration GetConfiguration()
