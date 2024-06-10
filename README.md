@@ -51,6 +51,22 @@ The **Phone Book Application** is a simple console-based application that allows
     - Prompts for the contact's name and new phone number.
 - **`exit`**: Exit the application.
 
+
+## Unit Tests
+Unit tests have been added to ensure the functionality of the `PhoneBook` class. These tests validate the behavior of individual methods within the class.
+
+- **AddContact_True:** Tests the `AddContact` method when adding a new contact.
+- **AddDuplicateContact_False:** Tests the `AddContact` method when attempting to add a duplicate contact.
+- **RemoveContact_True:** Tests the `RemoveContact` method when removing an existing contact.
+- **RemoveNonExistingContact_False:** Tests the `RemoveContact` method when attempting to remove a non-existing contact.
+- **SearchByName_True:** Tests the `SearchByName` method when searching for an existing contact by name.
+- **SearchNonExistingContactByName_False:** Tests the `SearchByName` method when searching for a non-existing contact by name.
+- **UpdateContact_True:** Tests the `UpdateContact` method when updating an existing contact's phone number.
+- **UpdateNonExistingContact_False:** Tests the `UpdateContact` method when attempting to update a non-existing contact.
+- **ListContacts_Prints:** Tests the `ListContacts` method to ensure it prints the list of contacts correctly.
+
+  
+
 ### Example Usage
 1. **Add a Contact:**
     ```
