@@ -13,28 +13,25 @@ public class PhoneBook
     public PhoneBook(IConfiguration configuration)
     {
         Contacts = new Dictionary<string, Contact>();
-        var projectDirectory = GetProjectDirectory();
-        var databasePath = Path.Combine(projectDirectory, "phonebook.db");
         _connectionString = configuration.GetConnectionString("DefaultConnection")
                             ?? throw new ArgumentException("Connection string is not specified");
-        _connectionString = new SqliteConnectionStringBuilder(_connectionString)
+        Initialize().Wait();
+    }
+
+    private async Task Initialize()
+    {
+        try
         {
-            DataSource = databasePath
-        }.ConnectionString;
-        CreateDatabaseAsync().Wait();
-        LoadContacts().Wait();
+            await CreateDatabaseAsync();
+            await LoadContacts();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"Error initializing phone book: {e.Message}");
+            throw;
+        }
     }
     
-    private static string GetProjectDirectory()
-    {
-        var currentDirectory = AppContext.BaseDirectory;
-        var projectDirectory = Directory.GetParent(currentDirectory)?.Parent?.Parent?.Parent?.FullName;
-        if (projectDirectory == null)
-        {
-            throw new DirectoryNotFoundException("Project directory not found.");
-        }
-        return projectDirectory;
-    }
     
     private async Task CreateDatabaseAsync()
     {
@@ -190,7 +187,6 @@ public class PhoneBook
             {
                 Contacts.Add(contact.Name, contact);
             }
-            Console.WriteLine("Contacts loaded successfully.");
         }
         catch (Exception e)
         {
