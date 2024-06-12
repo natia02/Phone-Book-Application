@@ -1,18 +1,31 @@
 ﻿using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
-
+using NLog;
+using NLog.Config;
+using NLog.Targets;
 
 namespace Phone_Book_Application
 {
     public class Program
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         public static async Task Main()
         {
+            var config = new LoggingConfiguration();
+            var logfile = new FileTarget("logfile") { FileName = "${basedir}/logs/app.log" };
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
+            var logconsole = new ConsoleTarget("logconsole");
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, logconsole);
+
+            LogManager.Configuration = config;
+
+            Logger.Debug("Application started");
+
             var configuration = GetConfiguration();
             PhoneBook phoneBook = new PhoneBook(configuration);
             PrintInstruction();
             await UserInteraction(phoneBook);
-            
         }
 
         private static IConfiguration GetConfiguration()
@@ -55,19 +68,19 @@ namespace Phone_Book_Application
                 case "exit":
                     return;
                 default:
+                    Logger.Warn("Invalid command entered");
                     Console.WriteLine("Please enter a valid command.");
                     break;
             }
-            
+
             await Continue(phoneBook);
-            
         }
 
         static async Task Continue(PhoneBook phoneBook)
         {
             Console.WriteLine("Do you need anything else? (yes/no)");
             string answer = (Console.ReadLine() ?? String.Empty).Trim().ToLower();
-            
+
             while (!IsValidAnswer(answer))
             {
                 Console.WriteLine("Please enter a valid answer (yes/no):");
@@ -77,8 +90,10 @@ namespace Phone_Book_Application
             if (answer.Equals("yes"))
             {
                 await UserInteraction(phoneBook);
-            }else if (answer.Equals("no"))
+            }
+            else if (answer.Equals("no"))
             {
+                Logger.Debug("Exiting application");
                 Console.WriteLine("Goodbye!");
             }
         }
@@ -87,30 +102,27 @@ namespace Phone_Book_Application
         {
             Console.WriteLine(prompt);
             string phoneNumber = (Console.ReadLine() ?? string.Empty).Trim();
-            
+
             while (!IsValidPhoneNumber(phoneNumber))
             {
                 Console.WriteLine("Please, enter a phone number in the following format (+995XXXXXXXXX or XXXXXXXXX)");
                 phoneNumber = (Console.ReadLine() ?? string.Empty).Trim();
             }
             return phoneNumber;
-            
         }
 
         static string ReadName(string prompt)
         {
             Console.WriteLine(prompt);
-            string name = (Console.ReadLine()?? string.Empty).Trim();
-            
+            string name = (Console.ReadLine() ?? string.Empty).Trim();
+
             while (string.IsNullOrEmpty(name))
             {
                 Console.WriteLine("Please, enter a name");
-                name = (Console.ReadLine()?? string.Empty).Trim();
+                name = (Console.ReadLine() ?? string.Empty).Trim();
             }
             return name;
         }
-
-
 
         static bool IsValidPhoneNumber(string phoneNumber)
         {
@@ -129,8 +141,7 @@ namespace Phone_Book_Application
             Console.WriteLine("Enter 'update' to update existing contact's phone number");
             Console.WriteLine("Enter 'exit' to exit the application");
         }
-        
-        
+
         static bool IsValidCommand(string? response)
         {
             return response is "add" or "remove" or "list" or "exit" or "search" or "update";
@@ -143,10 +154,11 @@ namespace Phone_Book_Application
 
             while (!IsValidCommand(response))
             {
-                Console.WriteLine("Please, enter a valid command: add, remove, list, update, search or exit");  
+                Logger.Warn("Invalid command entered: {Response}", response);
+                Console.WriteLine("Please, enter a valid command: add, remove, list, update, search or exit");
                 response = (Console.ReadLine() ?? string.Empty).Trim().ToLower();
             }
-            
+
             return response;
         }
 
@@ -154,10 +166,5 @@ namespace Phone_Book_Application
         {
             return answer is "yes" or "no";
         }
-
-
     }
-    
-    
-    
 }
